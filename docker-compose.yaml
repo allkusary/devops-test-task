@@ -1,0 +1,56 @@
+# Docker-compose file  for test task
+version: '3'
+
+services:
+  # Node application listen on 3000 port
+  nodejs: 
+    build:
+      context: node_app/
+      dockerfile: Dockerfile
+    image: mynodejs
+    container_name: test-nodejs
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+    networks:
+      - test-app-network
+
+  # Nginx service as revers proxy for Node application
+  # Domain name test.data-ox.com      
+  proxy:
+    image: nginx:mainline-alpine
+    container_name: test-proxy
+    restart: unless-stopped
+    ports:
+      - "8888:80"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    depends_on:
+      - nodejs
+    networks:
+      - test-app-network
+  
+  # PostgreSQL service with persistend data volume "database-data"
+  database:
+    image: "postgres" 
+    container_name: test-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+          - POSTGRES_USER=postgres # User for PostgreSQL
+          - POSTGRES_PASSWORD=postgres # Password for PostgreSQL
+          - POSTGRES_DB=testdb # DB name for PostgreSQL
+    volumes:
+      - database-data:/var/lib/postgresql/data/
+    networks:
+      - test-app-network
+
+networks:
+  test-app-network:
+    driver: bridge
+
+volumes:
+  database-data: # Named Volume for persistent PostgreSQL data
