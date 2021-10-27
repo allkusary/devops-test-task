@@ -24,7 +24,7 @@ services:
     container_name: test-proxy
     restart: unless-stopped
     ports:
-      - "8888:80"
+      - "80:80"
     volumes:
       - ./nginx:/etc/nginx/conf.d
     depends_on:
